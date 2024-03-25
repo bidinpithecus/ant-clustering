@@ -13,6 +13,7 @@ const ALIVE_ANT_COLOR: Rgb<u8> = Rgb([169,99,49]);
 
 mod ant;
 mod environment;
+mod data;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
@@ -48,7 +49,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut ants: Vec<Ant> = Vec::with_capacity(num_of_alive_ants);
 
     let mut grid = Grid::new(num_of_rows, num_of_cols);
-    grid.randomly_populate(num_of_dead_ants, Cell::DeadAnt);
+    grid.randomly_populate(num_of_dead_ants, Cell::Data);
     let alive_ants_pos = grid.randomly_populate(num_of_alive_ants, Cell::Ant);
 
     for i in 0..num_of_alive_ants {
@@ -101,7 +102,7 @@ fn render(grid: &mut Grid) -> RgbImage {
             let cell_color = match grid.get((x as usize, y as usize)) {
                 Cell::Empty => EMPTY_CELL_COLOR,
                 Cell::Ant => ALIVE_ANT_COLOR,
-                Cell::DeadAnt => DEAD_ANT_COLOR,
+                Cell::Data => DEAD_ANT_COLOR,
             };
             img.put_pixel(x, y, cell_color);
         }

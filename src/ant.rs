@@ -91,12 +91,12 @@ impl Ant {
     }
 
     pub fn pickup_item(&mut self, grid: &mut Grid, pos: (usize, usize)) {
-        if grid.is_dead_cell(pos) && self.curr_state == State::NotCarrying {
-            let dead_ants_around = grid.dead_ants_around(pos, self.view_radius);
+        if grid.is_data_cell(pos) && self.curr_state == State::NotCarrying {
+            let data_around = grid.data_around(pos, self.view_radius);
             let mut rng = thread_rng();
             let odds = 1.0
-                - ((dead_ants_around as f64 / (self.view_radius * 8) as f64)
-                    * (dead_ants_around as f64 / (self.view_radius * 8) as f64));
+                - ((data_around as f64 / (self.view_radius * 8) as f64)
+                    * (data_around as f64 / (self.view_radius * 8) as f64));
             let uniform = Uniform::new(0.0, 1.0);
             if odds >= rng.sample(uniform) {
                 self.change_state(State::Carrying);
@@ -107,14 +107,14 @@ impl Ant {
 
     pub fn drop_item(&mut self, grid: &mut Grid, pos: (usize, usize)) {
         if grid.is_empty_cell(pos) && self.curr_state == State::Carrying {
-            let dead_ants_around = grid.dead_ants_around(pos, self.view_radius);
+            let data_around = grid.data_around(pos, self.view_radius);
             let mut rng = thread_rng();
-            let odds = (dead_ants_around as f64 / (self.view_radius * 8) as f64)
-                * (dead_ants_around as f64 / (self.view_radius * 8) as f64);
+            let odds = (data_around as f64 / (self.view_radius * 8) as f64)
+                * (data_around as f64 / (self.view_radius * 8) as f64);
             let uniform = Uniform::new(0.0, 1.0);
             if odds >= rng.sample(uniform) {
                 self.change_state(State::NotCarrying);
-                grid.set_cell(pos, Cell::DeadAnt);
+                grid.set_cell(pos, Cell::Data);
             }
         }
     }

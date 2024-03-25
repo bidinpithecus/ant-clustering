@@ -3,7 +3,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Cell {
-    DeadAnt,
+    Data,
     Ant,
     Empty,
 }
@@ -18,7 +18,7 @@ pub struct Grid {
 impl fmt::Display for Cell {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Cell::DeadAnt => write!(f, "D"),
+            Cell::Data => write!(f, "D"),
             Cell::Ant => write!(f, "A"),
             Cell::Empty => write!(f, " "),
         }
@@ -81,9 +81,9 @@ impl Grid {
         positions
     }
 
-    pub fn is_dead_cell(&mut self, cell: (usize, usize)) -> bool {
+    pub fn is_data_cell(&mut self, cell: (usize, usize)) -> bool {
         let cell = (cell.0 % self.num_rows, cell.1 % self.num_cols);
-        self.m[cell.0][cell.1] == Cell::DeadAnt
+        self.m[cell.0][cell.1] == Cell::Data
     }
 
     pub fn is_empty_cell(&mut self, cell: (usize, usize)) -> bool {
@@ -101,7 +101,7 @@ impl Grid {
         self.m[cell.0][cell.1] = new_state;
     }
 
-    pub fn dead_ants_around(&mut self, cell: (usize, usize), view_radius: usize) -> u8 {
+    pub fn data_around(&mut self, cell: (usize, usize), view_radius: usize) -> u8 {
         let (mut x, mut y) = cell;
         let mut num_of_ants = 0;
 
@@ -131,7 +131,7 @@ impl Grid {
                 let nx = (x + i) % width;
                 let ny = (y + j) % height;
 
-                if self.is_dead_cell((nx, ny)) {
+                if self.is_data_cell((nx, ny)) {
                     num_of_ants += 1;
                 }
             }
