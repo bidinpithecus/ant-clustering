@@ -1,10 +1,12 @@
 use rand::{self, Rng};
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+use crate::data::{self, Data};
+
+#[derive(Debug, Clone, PartialEq, Copy)]
 pub enum Cell {
-    Data,
-    Ant,
+    Data { content: data::Data },
+    Ant { carrying: Option<data::Data> },
     Empty,
 }
 
@@ -18,8 +20,14 @@ pub struct Grid {
 impl fmt::Display for Cell {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Cell::Data => write!(f, "D"),
-            Cell::Ant => write!(f, "A"),
+            Cell::Data { .. } => write!(f, "D"),
+            Cell::Ant { carrying } => {
+                if carrying.is_none() {
+                    write!(f, "A")
+                } else {
+                    write!(f, "a")
+                }
+            }
             Cell::Empty => write!(f, " "),
         }
     }
@@ -55,88 +63,117 @@ impl Grid {
         self.num_rows
     }
 
-    pub fn get(&mut self, cell: (usize, usize)) -> Cell {
-        let cell = (cell.0 % self.num_rows, cell.1 % self.num_cols);
+    pub fn get(&mut self, cell: (isize, isize)) -> Cell {
+        let cell = self.safe_cell(cell);
         self.m[cell.0][cell.1]
     }
 
-    pub fn randomly_populate(&mut self, num_items: usize, item: Cell) -> Vec<(usize, usize)> {
-        assert!(self.num_rows * self.num_cols > num_items);
+    pub fn random_empty_cell(&mut self) -> (usize, usize) {
         let mut inserted = false;
         let mut rng = rand::thread_rng();
-        let mut positions: Vec<(usize, usize)> = Vec::with_capacity(num_items);
+        let mut row: usize = 0;
+        let mut col: usize = 0;
 
-        for _ in 0..num_items {
-            while !inserted {
-                let row = rng.gen::<usize>() % self.num_rows;
-                let col = rng.gen::<usize>() % self.num_cols;
-                if self.m[row][col] == Cell::Empty {
-                    self.m[row][col] = item;
-                    positions.push((row, col));
-                    inserted = true;
-                }
+        while !inserted {
+            row = rng.gen::<usize>() % self.num_rows;
+            col = rng.gen::<usize>() % self.num_cols;
+            if self.m[row][col] == Cell::Empty {
+                inserted = true;
             }
-            inserted = false;
         }
-        positions
+        (row, col)
     }
 
-    pub fn is_data_cell(&mut self, cell: (usize, usize)) -> bool {
-        let cell = (cell.0 % self.num_rows, cell.1 % self.num_cols);
-        self.m[cell.0][cell.1] == Cell::Data
+    pub fn is_data_cell(&mut self, cell: (isize, isize)) -> bool {
+        let cell = self.safe_cell(cell);
+        match self.m[cell.0][cell.1] {
+            Cell::Data { .. } => true,
+            Cell::Ant { .. } => false,
+            Cell::Empty => false,
+        }
     }
 
-    pub fn is_empty_cell(&mut self, cell: (usize, usize)) -> bool {
-        let cell = (cell.0 % self.num_rows, cell.1 % self.num_cols);
+    pub fn get_data_from_data_cell(&mut self, cell: (isize, isize)) -> Option<data::Data> {
+        let cell = self.safe_cell(cell);
+        match self.m[cell.0][cell.1] {
+            Cell::Data { content } => Some(content),
+            Cell::Ant { carrying } => carrying,
+            Cell::Empty => None,
+        }
+    }
+
+    pub fn is_empty_cell(&mut self, cell: (isize, isize)) -> bool {
+        let cell = self.safe_cell(cell);
         self.m[cell.0][cell.1] == Cell::Empty
     }
 
-    pub fn is_ant_cell(&mut self, cell: (usize, usize)) -> bool {
-        let cell = (cell.0 % self.num_rows, cell.1 % self.num_cols);
-        self.m[cell.0][cell.1] == Cell::Ant
+    pub fn is_ant_cell(&mut self, cell: (isize, isize)) -> bool {
+        let cell = self.safe_cell(cell);
+        match self.m[cell.0][cell.1] {
+            Cell::Data { .. } => false,
+            Cell::Ant { .. } => true,
+            Cell::Empty => false,
+        }
     }
 
-    pub fn set_cell(&mut self, cell: (usize, usize), new_state: Cell) {
-        let cell = (cell.0 % self.num_rows, cell.1 % self.num_cols);
+    pub fn set_cell(&mut self, cell: (isize, isize), new_state: Cell) {
+        let cell = self.safe_cell(cell);
         self.m[cell.0][cell.1] = new_state;
     }
 
-    pub fn data_around(&mut self, cell: (usize, usize), view_radius: usize) -> u8 {
-        let (mut x, mut y) = cell;
-        let mut num_of_ants = 0;
-
-        let width = self.num_cols;
-        let height = self.num_rows;
-
-        if x == 0 {
-            x = width - 1;
+    fn safe_cell(&mut self, cell: (isize, isize)) -> (usize, usize) {
+        let mut x = if cell.0 < 0 {
+            self.width() - 1
+        } else if cell.0 >= self.width() as isize {
+            (cell.0 as usize) % self.width()
         } else {
-            x -= 1;
+            cell.0 as usize
+        };
+
+        let mut y = if cell.1 < 0 {
+            self.height() - 1
+        } else if cell.1 >= self.height() as isize {
+            (cell.1 as usize) % self.height()
+        } else {
+            cell.1 as usize
+        };
+
+        // Ensure x and y are within bounds
+        if x >= self.width() {
+            x = self.width() - 1;
+        }
+        if y >= self.height() {
+            y = self.height() - 1;
         }
 
-        if y == 0 {
-            y = height - 1;
-        } else {
-            y -= 1;
-        }
+        (x, y)
+    }
 
-        let view_radius = view_radius * 3;
+    pub fn data_around(&mut self, data: Data, view_radius: usize, alpha: f64) -> f64 {
+        let (x, y) = (data.pos().0 as isize, data.pos().1 as isize);
+        let mut similarity = 0.0;
 
-        for i in 0..view_radius {
-            for j in 0..view_radius {
-                if i == 1 && j == 1 {
-                    continue;
+        let view_radius = view_radius as isize + 1;
+
+        for dx in -view_radius as isize..view_radius as isize {
+            for dy in -view_radius as isize..view_radius as isize {
+                if dx == 0 && dy == 0 {
+                    continue; // Skip the center cell
                 }
-
-                let nx = (x + i) % width;
-                let ny = (y + j) % height;
-
+                let (nx, ny) = (x + dx, y + dy);
                 if self.is_data_cell((nx, ny)) {
-                    num_of_ants += 1;
+                    if let Some(data_next_cell) = self.get_data_from_data_cell((nx, ny)) {
+                        let dij = data.euclidian_distance(data_next_cell);
+                        similarity += 1.0 - dij / alpha;
+                    }
                 }
             }
         }
 
-        num_of_ants
+        if similarity <= 0.0 {
+            return 0.0;
+        }
+
+        similarity / 8.0 // Divided by 8 since there are 8 neighbors (excluding diagonals)
     }
 }
