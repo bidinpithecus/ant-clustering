@@ -92,13 +92,17 @@ fn simulate_and_render(mut grid: Grid, mut ants: Vec<Ant>, num_of_iterations: us
 }
 
 fn render(grid: &mut Grid) -> RgbImage {
-    let width = grid.width() as u32;
-    let height = grid.height() as u32;
+    let scale_factor: u32 = 10;
+    let width = grid.width() as u32 * scale_factor;
+    let height = grid.height() as u32 * scale_factor;
     let mut img = RgbImage::new(width, height);
 
     for y in 0..height {
         for x in 0..width {
-            let cell_color = match grid.get((x as usize, y as usize)) {
+            let grid_x = x / scale_factor;
+            let grid_y = y / scale_factor;
+
+            let cell_color = match grid.get((grid_x as usize, grid_y as usize)) {
                 Cell::Empty => EMPTY_CELL_COLOR,
                 Cell::Ant => ALIVE_ANT_COLOR,
                 Cell::DeadAnt => DEAD_ANT_COLOR,
