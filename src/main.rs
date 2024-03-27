@@ -14,7 +14,7 @@ const EMPTY_CELL_COLOR: Rgb<u8> = Rgb([200, 200, 200]);
 const ALIVE_ANT_COLOR: Rgb<u8> = Rgb([0, 0, 0]);
 const K1: f64 = 0.35;
 const K2: f64 = 0.65;
-const ALPHA: f64 = 30.0;
+const ALPHA: f64 = 3.0;
 
 mod ant;
 mod data;
@@ -78,7 +78,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let dir_name = String::from("results");
         let ant_vision = 1;
         let num_of_alive_ants: usize = 50;
-        let num_of_items: usize = 400;
+        let num_of_items: usize = 600;
         let num_of_iterations: usize = 5_000_000;
         let num_of_rows: usize = 60;
         let num_of_cols: usize = 60;
@@ -95,7 +95,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         eprintln!("Usage: {} <dir_name_for_result> <ant_vision> <rows> <cols> <alive_ants> <items> <iterations>", &args[0]);
         eprintln!(
             "Example: {} {} {} {} {} {} {} {}",
-            &args[0], "results", 1, 100, 100, 50, 400, 1_000_000
+            &args[0], "results", 1, 100, 100, 50, 600, 5_000_000
         );
         std::process::exit(1);
     };
@@ -108,7 +108,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut grid = Grid::new(num_of_rows, num_of_cols);
 
-    add_groups_from_file("input/4_groups.txt", &mut grid)?;
+    add_groups_from_file("input/15_groups.txt", &mut grid)?;
 
     for _ in 0..num_of_alive_ants {
         let pos = grid.random_empty_cell();
@@ -174,10 +174,21 @@ fn render(grid: &mut Grid) -> RgbImage {
                 Cell::Empty => EMPTY_CELL_COLOR,
                 Cell::Ant { .. } => ALIVE_ANT_COLOR,
                 Cell::Data { content } => match content.label() {
-                    1 => Rgb([255, 0, 0]),
-                    2 => Rgb([0, 255, 0]),
-                    3 => Rgb([0, 0, 255]),
-                    4 => Rgb([255, 255, 0]),
+                    1 => Rgb([132, 41, 219]),
+                    2 => Rgb([14, 193, 66]),
+                    3 => Rgb([255, 87, 33]),
+                    4 => Rgb([98, 205, 235]),
+                    5 => Rgb([168, 17, 234]),
+                    6 => Rgb([40, 119, 66]),
+                    7 => Rgb([221, 130, 35]),
+                    8 => Rgb([73, 227, 76]),
+                    9 => Rgb([15, 88, 203]),
+                    10 => Rgb([194, 93, 156]),
+                    11 => Rgb([255, 207, 33]),
+                    12 => Rgb([109, 23, 206]),
+                    13 => Rgb([32, 199, 195]),
+                    14 => Rgb([225, 71, 28]),
+                    15 => Rgb([77, 144, 31]),
                     _ => Rgb([255, 255, 255]),
                 },
             };
