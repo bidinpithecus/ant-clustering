@@ -28,7 +28,7 @@ impl Ant {
         alpha: f64,
     ) {
         let mut rng = rand::thread_rng();
-        let direction = rng.gen::<usize>() % 4;
+        let direction = rng.gen::<usize>() % 8;
         let mut new_pos = (
             (self.curr_pos.0 .0 as isize, self.curr_pos.0 .1 as isize),
             self.curr_pos.1,
@@ -37,10 +37,26 @@ impl Ant {
         let height = grid.height();
 
         match direction {
-            0 => new_pos.0 .0 = new_pos.0 .0 - 1,
-            1 => new_pos.0 .0 = new_pos.0 .0 + 1,
-            2 => new_pos.0 .1 = new_pos.0 .1 - 1,
-            3 => new_pos.0 .1 = new_pos.0 .1 + 1,
+            0 => new_pos.0 .0 -= 1,
+            1 => new_pos.0 .0 += 1,
+            2 => new_pos.0 .1 -= 1,
+            3 => new_pos.0 .1 += 1,
+            4 => {
+                new_pos.0 .0 -= 1;
+                new_pos.0 .1 -= 1
+            }
+            5 => {
+                new_pos.0 .0 -= 1;
+                new_pos.0 .1 += 1
+            }
+            6 => {
+                new_pos.0 .0 += 1;
+                new_pos.0 .1 -= 1
+            }
+            7 => {
+                new_pos.0 .0 += 1;
+                new_pos.0 .1 += 1
+            }
             _ => panic!("Invalid direction"),
         }
 

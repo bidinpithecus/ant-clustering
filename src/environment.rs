@@ -138,7 +138,6 @@ impl Grid {
             cell.1 as usize
         };
 
-        // Ensure x and y are within bounds
         if x >= self.width() {
             x = self.width() - 1;
         }
@@ -153,12 +152,12 @@ impl Grid {
         let (x, y) = (data.pos().0 as isize, data.pos().1 as isize);
         let mut similarity = 0.0;
 
-        let view_radius = view_radius as isize + 1;
+        let view_radius = view_radius as isize;
 
-        for dx in -view_radius as isize..view_radius as isize {
-            for dy in -view_radius as isize..view_radius as isize {
+        for dx in -view_radius as isize..view_radius as isize + 1 {
+            for dy in -view_radius as isize..view_radius as isize + 1 {
                 if dx == 0 && dy == 0 {
-                    continue; // Skip the center cell
+                    continue;
                 }
                 let (nx, ny) = (x + dx, y + dy);
                 if self.is_data_cell((nx, ny)) {
@@ -174,6 +173,8 @@ impl Grid {
             return 0.0;
         }
 
-        similarity / 8.0 // Divided by 8 since there are 8 neighbors (excluding diagonals)
+        let num_of_cells_around = (2 * view_radius + 1) * (2 * view_radius + 1) - 1;
+
+        similarity / num_of_cells_around as f64
     }
 }
