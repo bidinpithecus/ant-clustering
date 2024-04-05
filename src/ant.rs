@@ -55,8 +55,13 @@ impl Ant {
         }
 
         if !grid.is_ant_cell(new_pos.0) {
-            self.drop_item(grid, new_pos.0);
-            if should_pick_after {
+            if grid.is_empty_cell(new_pos.0) && self.curr_state == State::Carrying {
+                self.drop_item(grid, new_pos.0);
+            }
+            if grid.is_dead_cell(new_pos.0)
+                && self.curr_state == State::NotCarrying
+                && should_pick_after
+            {
                 self.pickup_item(grid, new_pos.0);
             }
             self.mov(grid, new_pos.0);
@@ -91,31 +96,28 @@ impl Ant {
     }
 
     pub fn pickup_item(&mut self, grid: &mut Grid, pos: (usize, usize)) {
-        if grid.is_dead_cell(pos) && self.curr_state == State::NotCarrying {
-            let dead_ants_around = grid.dead_ants_around(pos, self.view_radius);
-            let mut rng = thread_rng();
-            let odds = 1.0
-                - ((dead_ants_around as f64 / (self.view_radius * 8) as f64)
-                    * (dead_ants_around as f64 / (self.view_radius * 8) as f64));
-            let uniform = Uniform::new(0.0, 1.0);
-            if odds >= rng.sample(uniform) {
-                self.change_state(State::Carrying);
-                grid.set_cell(pos, Cell::Empty);
-            }
+        let random_uniform = thread_rng().sample(Uniform::new(0.0, 1.0));
+
+        let num_of_cells_around = ((2 * self.view_radius + 1).pow(2) - 1) as f64;
+        let dead_ants_around = grid.dead_ants_around(pos, self.view_radius) as f64;
+
+        let odds = 1.0 - (dead_ants_around / num_of_cells_around).powi(2);
+        if odds >= random_uniform {
+            self.change_state(State::Carrying);
+            grid.set_cell(pos, Cell::Empty);
         }
     }
 
     pub fn drop_item(&mut self, grid: &mut Grid, pos: (usize, usize)) {
-        if grid.is_empty_cell(pos) && self.curr_state == State::Carrying {
-            let dead_ants_around = grid.dead_ants_around(pos, self.view_radius);
-            let mut rng = thread_rng();
-            let odds = (dead_ants_around as f64 / (self.view_radius * 8) as f64)
-                * (dead_ants_around as f64 / (self.view_radius * 8) as f64);
-            let uniform = Uniform::new(0.0, 1.0);
-            if odds >= rng.sample(uniform) {
-                self.change_state(State::NotCarrying);
-                grid.set_cell(pos, Cell::DeadAnt);
-            }
+        let random_uniform = thread_rng().sample(Uniform::new(0.0, 1.0));
+
+        let num_of_cells_around = ((2 * self.view_radius + 1).pow(2) - 1) as f64;
+        let dead_ants_around = grid.dead_ants_around(pos, self.view_radius) as f64;
+
+        let odds = (dead_ants_around / num_of_cells_around).powi(2);
+        if odds >= random_uniform {
+            self.change_state(State::NotCarrying);
+            grid.set_cell(pos, Cell::DeadAnt);
         }
     }
 }
