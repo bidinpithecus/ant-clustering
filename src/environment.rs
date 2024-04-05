@@ -102,34 +102,31 @@ impl Grid {
     }
 
     pub fn dead_ants_around(&mut self, cell: (usize, usize), view_radius: usize) -> u8 {
-        let (mut x, mut y) = cell;
+        let (x, y) = (cell.0 as isize, cell.1 as isize);
         let mut num_of_ants = 0;
 
-        let width = self.num_cols;
-        let height = self.num_rows;
+        let view_radius = view_radius as isize;
 
-        if x == 0 {
-            x = width - 1;
-        } else {
-            x -= 1;
-        }
-
-        if y == 0 {
-            y = height - 1;
-        } else {
-            y -= 1;
-        }
-
-        let view_radius = view_radius * 3;
-
-        for i in 0..view_radius {
-            for j in 0..view_radius {
-                if i == 1 && j == 1 {
+        for dx in -view_radius as isize..view_radius as isize + 1 {
+            for dy in -view_radius as isize..view_radius as isize + 1 {
+                if dx == 0 && dy == 0 {
                     continue;
                 }
+                let (mut nx, mut ny) = (x + dx, y + dy);
 
-                let nx = (x + i) % width;
-                let ny = (y + j) % height;
+                if nx < 0 {
+                    nx = self.num_cols as isize - 1;
+                } else if nx == self.num_cols as isize {
+                    nx = 0;
+                }
+
+                if ny < 0 {
+                    ny = self.num_rows as isize - 1;
+                } else if ny == self.num_rows as isize {
+                    ny = 0;
+                }
+
+                let (nx, ny) = (nx as usize, ny as usize);
 
                 if self.is_dead_cell((nx, ny)) {
                     num_of_ants += 1;
