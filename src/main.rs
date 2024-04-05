@@ -1,10 +1,10 @@
 use crate::ant::Ant;
 use data::Data;
-use environment::Cell;
-use environment::Grid;
+use environment::{Cell, Grid};
 use image::{Rgb, RgbImage};
 use std::env;
 use std::error::Error;
+use std::f64::{INFINITY, NEG_INFINITY};
 use std::fs;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -56,6 +56,58 @@ fn add_groups_from_file(
     }
 
     Ok((format!("{higher_label}_groups"), num_of_items))
+}
+
+fn normalize_data_set(input_file: &str, output_file: &str) -> std::io::Result<()> {
+    let input = File::open(input_file)?;
+    let reader = BufReader::new(input);
+    let mut min_x = INFINITY;
+    let mut min_y = INFINITY;
+    let mut max_x = NEG_INFINITY;
+    let mut max_y = NEG_INFINITY;
+
+    for line in reader.lines() {
+        let line = line?;
+        let cols: Vec<&str> = line.split_whitespace().collect();
+        if cols.len() < 2 {
+            continue;
+        }
+        let x: f64 = cols[0].parse().unwrap();
+        let y: f64 = cols[1].parse().unwrap();
+
+        min_x = min_x.min(x);
+        max_x = max_x.max(x);
+        min_y = min_y.min(y);
+        max_y = max_y.max(y);
+    }
+
+    let input = File::open(input_file)?;
+    let reader = BufReader::new(input);
+
+    let mut buffer = vec![];
+
+    for line in reader.lines() {
+        let line = line?;
+        let cols: Vec<&str> = line.split_whitespace().collect();
+        if cols.len() < 2 {
+            continue;
+        }
+
+        let x: f64 = cols[0].parse().unwrap();
+        let y: f64 = cols[1].parse().unwrap();
+
+        let normalized_x = (x - min_x) / (max_x - min_x);
+        let normalized_y = (y - min_y) / (max_y - min_y);
+
+        buffer.push(format!(
+            "{:.8}\t{:.8}\t{}\n",
+            normalized_x, normalized_y, cols[2]
+        ));
+    }
+
+    fs::write(output_file, buffer.join(""))?;
+
+    Ok(())
 }
 
 fn main() -> Result<(), Box<dyn Error>> {

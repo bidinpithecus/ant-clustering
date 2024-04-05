@@ -173,7 +173,7 @@ impl Grid {
             return 0.0;
         }
 
-        let num_of_cells_around = (2 * view_radius + 1) * (2 * view_radius + 1) - 1;
+        let num_of_cells_around = (2 * view_radius + 1).pow(2) - 1;
 
         similarity / num_of_cells_around as f64
     }
