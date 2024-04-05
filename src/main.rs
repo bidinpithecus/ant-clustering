@@ -12,12 +12,6 @@ use std::path::Path;
 
 const EMPTY_CELL_COLOR: Rgb<u8> = Rgb([200, 200, 200]);
 const ALIVE_ANT_COLOR: Rgb<u8> = Rgb([0, 0, 0]);
-const K1: f64 = 0.35;
-const K2: f64 = 0.65;
-// Best ⍺ found for 15 groups
-const ALPHA: f64 = 0.9732;
-// Best ⍺ found for 4 groups
-// const ALPHA: f64 = 13.0;
 
 mod ant;
 mod data;
@@ -100,7 +94,7 @@ fn normalize_data_set(input_file: &str, output_file: &str) -> std::io::Result<()
         let normalized_y = (y - min_y) / (max_y - min_y);
 
         buffer.push(format!(
-            "{:.8}\t{:.8}\t{}\n",
+            "{:.16}\t{:.16}\t{}\n",
             normalized_x, normalized_y, cols[2]
         ));
     }
@@ -113,48 +107,69 @@ fn normalize_data_set(input_file: &str, output_file: &str) -> std::io::Result<()
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
 
-    let (input_file, num_of_rows, num_of_cols, num_of_alive_ants, num_of_iterations, ant_vision) =
-        if args.len() == 7 {
-            let input_file: String = args[1].clone();
-            let ant_vision: usize = args[2].parse()?;
-            let num_of_rows: usize = args[3].parse()?;
-            let num_of_cols: usize = args[4].parse()?;
-            let num_of_alive_ants: usize = args[5].parse()?;
-            let num_of_iterations: usize = args[6].parse()?;
-            (
-                input_file,
-                num_of_rows,
-                num_of_cols,
-                num_of_alive_ants,
-                num_of_iterations,
-                ant_vision,
-            )
-        } else if args.len() == 1 {
-            let input_file: String = "input/4_groups.txt".to_string();
-            let ant_vision = 1;
-            let num_of_alive_ants: usize = 10;
-            let num_of_iterations: usize = 4_000_000;
-            let num_of_rows: usize = 50;
-            let num_of_cols: usize = 50;
-            (
-                input_file,
-                num_of_rows,
-                num_of_cols,
-                num_of_alive_ants,
-                num_of_iterations,
-                ant_vision,
-            )
-        } else {
-            eprintln!(
-                "Usage: {} <input_file> <ant_vision> <rows> <cols> <alive_ants> <iterations>",
-                &args[0]
-            );
-            eprintln!(
-                "Example: {} {} {} {} {} {} {}",
-                &args[0], "input/4_groups.txt", 1, 50, 50, 10, 4_000_000
-            );
-            std::process::exit(1);
-        };
+    let (
+        input_file,
+        num_of_rows,
+        num_of_cols,
+        num_of_alive_ants,
+        num_of_iterations,
+        ant_vision,
+        k1,
+        k2,
+        alpha,
+    ) = if args.len() == 10 {
+        let input_file: String = args[1].clone();
+        let ant_vision: usize = args[2].parse()?;
+        let num_of_rows: usize = args[3].parse()?;
+        let num_of_cols: usize = args[4].parse()?;
+        let num_of_alive_ants: usize = args[5].parse()?;
+        let num_of_iterations: usize = args[6].parse()?;
+        let k1: f64 = args[7].parse()?;
+        let k2: f64 = args[8].parse()?;
+        let alpha: f64 = args[9].parse()?;
+        (
+            input_file,
+            num_of_rows,
+            num_of_cols,
+            num_of_alive_ants,
+            num_of_iterations,
+            ant_vision,
+            k1,
+            k2,
+            alpha,
+        )
+    } else if args.len() == 1 {
+        let input_file: String = "input/4_groups.txt".to_string();
+        let ant_vision = 1;
+        let num_of_alive_ants: usize = 10;
+        let num_of_iterations: usize = 4_000_000;
+        let num_of_rows: usize = 50;
+        let num_of_cols: usize = 50;
+        let k1 = 1.0; // Default value for k1
+        let k2 = 1.0; // Default value for k2
+        let alpha = 1.0; // Default value for alpha
+        (
+            input_file,
+            num_of_rows,
+            num_of_cols,
+            num_of_alive_ants,
+            num_of_iterations,
+            ant_vision,
+            k1,
+            k2,
+            alpha,
+        )
+    } else {
+        eprintln!(
+            "Usage: {} <input_file> <ant_vision> <rows> <cols> <alive_ants> <iterations> <k1> <k2> <alpha>",
+            &args[0]
+        );
+        eprintln!(
+            "Example: {} {} {} {} {} {} {} {} {} {}",
+            &args[0], "input/4_groups.txt", 1, 50, 50, 10, 4_000_000, 0.35, 0.65, 13.0
+        );
+        std::process::exit(1);
+    };
 
     let mut ants: Vec<Ant> = Vec::with_capacity(num_of_alive_ants);
     let mut grid = Grid::new(num_of_rows, num_of_cols);
@@ -177,12 +192,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let initial_state_image = render(&mut grid);
-    initial_state_image.save(format!("{}/state_0_for_{}x{}_grid_with_{}_alive_ants_with_radius_vision_{}_and_{}_items_and_{}_iterations.png", dir_name, num_of_rows, num_of_cols, num_of_alive_ants, ant_vision, num_of_items, num_of_iterations))?;
+    initial_state_image.save(format!("{}/state_0_for_{}x{}_grid_with_{}_alive_ants_with_radius_vision_{}_and_{}_items_and_{}_iterations_{}_k1_{}_k2_{}_alpha.png", dir_name, num_of_rows, num_of_cols, num_of_alive_ants, ant_vision, num_of_items, num_of_iterations, k1, k2, alpha))?;
 
-    let (mid_state_image, final_state_image) = simulate_and_render(grid, ants, num_of_iterations);
+    let final_state_image = simulate_and_render(grid, ants, num_of_iterations, k1, k2, alpha);
 
-    mid_state_image.save(format!("{}/state_1_for_{}x{}_grid_with_{}_alive_ants_with_radius_vision_{}_and_{}_items_and_{}_iterations.png", dir_name, num_of_rows, num_of_cols, num_of_alive_ants, ant_vision, num_of_items, num_of_iterations))?;
-    final_state_image.save(format!("{}/state_2_for_{}x{}_grid_with_{}_alive_ants_with_radius_vision_{}_and_{}_items_and_{}_iterations.png", dir_name, num_of_rows, num_of_cols, num_of_alive_ants, ant_vision, num_of_items, num_of_iterations))?;
+    final_state_image.save(format!("{}/state_2_for_{}x{}_grid_with_{}_alive_ants_with_radius_vision_{}_and_{}_items_and_{}_iterations_{}_k1_{}_k2_{}_alpha.png", dir_name, num_of_rows, num_of_cols, num_of_alive_ants, ant_vision, num_of_items, num_of_iterations, k1, k2, alpha))?;
 
     Ok(())
 }
@@ -191,21 +205,20 @@ fn simulate_and_render(
     mut grid: Grid,
     mut ants: Vec<Ant>,
     num_of_iterations: usize,
-) -> (RgbImage, RgbImage) {
-    let mut mid_state_image = render(&mut grid);
+    k1: f64,
+    k2: f64,
+    alpha: f64,
+) -> RgbImage {
     let mut indices_to_remove: Vec<usize> = Vec::with_capacity(ants.len());
-    for i in 0..num_of_iterations {
-        if i == num_of_iterations / 2 {
-            mid_state_image = render(&mut grid);
-        }
+    for _ in 0..num_of_iterations {
         for ant in ants.iter_mut() {
-            ant.action(&mut grid, true, K1, K2, ALPHA);
+            ant.action(&mut grid, true, k1, k2, alpha);
         }
     }
 
     while !ants.is_empty() {
         for (i, ant) in ants.iter_mut().enumerate() {
-            ant.action(&mut grid, false, K1, K2, ALPHA);
+            ant.action(&mut grid, false, k1, k2, alpha);
             if ant.carrying().is_none() {
                 indices_to_remove.push(i);
                 let ant_pos = ant.get_pos();
@@ -222,7 +235,7 @@ fn simulate_and_render(
         indices_to_remove.clear();
     }
 
-    (mid_state_image, render(&mut grid))
+    render(&mut grid)
 }
 
 fn render(grid: &mut Grid) -> RgbImage {
