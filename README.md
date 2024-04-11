@@ -28,10 +28,12 @@ Replacing `<input_file>`, `<ant_vision>`, `<rows>`, `<cols>`, `<alive_ants>`, `<
 cargo run --release "input/4_groups.txt" 1 50 50 10 4000000 0.35 0.65 13.0
 ```
 
-<div style="width: 45vw;">
-  <img src="results/4_groups/state_0_for_50x50_grid_with_15_alive_ants_with_radius_vision_1_and_400_items_and_50000000_iterations_0.5_k1_0.025_k2_0.35_alpha.png" alt="Initial state">
-  <img src="results/4_groups/state_2_for_50x50_grid_with_15_alive_ants_with_radius_vision_1_and_400_items_and_50000000_iterations_0.5_k1_0.025_k2_0.35_alpha.png" alt="Final state">
+<div>
+  <img src="results/4_groups/state_0_for_50x50_grid_with_15_alive_ants_with_radius_vision_1_and_400_items_and_50000000_iterations_0.5_k1_0.025_k2_0.35_alpha.png" alt="Initial state" width="200px">
+  <img src="results/4_groups/state_2_for_50x50_grid_with_15_alive_ants_with_radius_vision_1_and_400_items_and_50000000_iterations_0.5_k1_0.025_k2_0.35_alpha.png" alt="Final state" width="200px>
 </div>
 
-![Start](results/15_groups/state_0_for_50x50_grid_with_15_alive_ants_with_radius_vision_1_and_600_items_and_50000000_iterations_0.9_k1_0.05_k2_0.11_alpha.png)
-![End](results/15_groups/state_2_for_50x50_grid_with_15_alive_ants_with_radius_vision_1_and_600_items_and_50000000_iterations_0.9_k1_0.05_k2_0.11_alpha.png)
+<div>
+  <img src="results/15_groups/state_0_for_50x50_grid_with_15_alive_ants_with_radius_vision_1_and_600_items_and_50000000_iterations_0.9_k1_0.05_k2_0.11_alpha.png" alt="Initial state" width="200px">
+  <img src="results/15_groups/state_2_for_50x50_grid_with_15_alive_ants_with_radius_vision_1_and_600_items_and_50000000_iterations_0.9_k1_0.05_k2_0.11_alpha.png" alt="Final state" width="200px>
+</div>
