@@ -16,9 +16,12 @@ To execute the simulation, use the cargo tool. It's recommended to compile and/o
 cargo run --release
 ```
 or
+\
+\
 `
 cargo run --release <dir_name_for_result> <ant_vision> <rows> <cols> <alive_ants> <dead_ants> <iterations>
 `
+\
 Replacing `<dir_name_for_result>`, `<ant_vision>`, `<rows>`, `<cols>`, `<alive_ants>`, `<dead_ants>`, and `<iterations>` with appropriate values according to your requirements.
 
 ```
