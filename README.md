@@ -4,7 +4,7 @@
 
 ### Homogeneous Data Branch (Dead Ants)
 
-This branch focuses on simulating ant clustering with homogeneous data, represented by dead ants. For the version handling heterogeneous data, please visit the [data_clustering branch](../../tree/data_clustering).
+This branch focuses on simulating ant clustering with homogeneous data, represented by dead ants. For the version handling heterogeneous data, please visit the [data_clustering branch](../../tree/data-clustering).
 
 #### Usage
 
